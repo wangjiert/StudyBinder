@@ -1,0 +1,23 @@
+//用来描述一个Service组件的死亡接受通知
+struct binder_ref_death{
+	//用来标志一个具体的死亡通知类型
+	//取值为BINDER_WORK_DEAD_BINDER、BINDER_WORK_CLEAR_DEATH_NOTIFICATION、BINDER_WORK_DEAD_BINDER_AND_CLEAR
+	struct bindr_work work;
+	//用来保存负责接受死亡通知的对象的地址
+	void __user *cookie;
+}
+
+Binder驱动程序决定要向一个Client进程发送一个Service组件死亡通知时，会将一个binder_ref_death结构体封装成一个工作项，并且根据实际情况来设置该结构体的成员变量work的值，最后将这个工作项添加到client进程的todo队列中去等待处理
+
+在下面两种情况下，Binder驱动程序会向一个client进程发送一个service组件的死亡通知:
+	(1).当Binder驱动程序监测到一个Service组件死亡时，它就会找到该service组件对应的Binder实体对象，然后通过Binder实体对像的refs就可以找到
+所有引用了它的client进程，最后就找到这些client进程所注册的死亡接受通知，即一个binder_ref_death结构体，这时候Binder驱动程序就会将该
+binder_ref_death结构体添加到client进程的todo队列中去等待处理，在这种情况下Binder驱动程序将死亡通知的类型设置为BINDER_WORK_DEAD_BINDER
+	(2).当client进程向Binder驱动程序注册一个死亡接受通知时，如果它引用的service组件已经死亡，那么Binder驱动程序就会马上发送一个死亡
+通知给该client进程，在这种情况下，Binder驱动程序将死亡通知的类型设置为BINDER_WORK_DEAD_BINDER
+	另外，当client进程向Binder驱动程序注销一个死亡接受通知时，Binder驱动程序也会向该client进程的todo队列发送一个类型为binder_ref_death的
+工作项，用来表示注销结果。分两种情况表示:
+	
+	(1).如果client进程在注销一个死亡接受通知时，相应的service组件还没有死亡，那么binder驱动程序就会找到之前所注册的一个binder_ref_death结
+构体，并且将它的类型work修改为BINDER_WORK_CLEAR_DEATH_NOTIFICATION,然后再将该binder_ref_death结构体封装成一个工作项添加到该client进程的todo队列
+	(2).如果client进程在注销一个死亡接受通知时，相应的service组件已经死亡，那么Binder驱动程序就会找到之前之前所注册的
