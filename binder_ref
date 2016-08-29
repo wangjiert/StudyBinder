@@ -1,0 +1,29 @@
+//用来描述一个Binder引用对象
+//每一个client组件在Binder驱动程序中都对应有一个Binder引用对象，用来描述它再内核中的状态
+//Binder驱动程序通过强引用计数和弱引用计数技术来维护他们的生命周期
+
+struct binder_ref{
+	//用来标志一个Binder引用对象的身份，它是用来帮助调试Binder驱动程序的
+	int debug_id;
+	struct rb_node rb_node_desc;--------
+					    |========>一个宿主进程使用两个红黑树来保存它内部所有的Binder引用对象，它们分别以句柄值和对应的Binder实体对象的
+					    |========>地址来作为关键字保存这些Binder引用对象，而这些Binder引用对象的成员变量rb_node_desc和rb_node_node正好
+					    |========>是这两个红黑树中的节点
+	struct rb_node rb_node_node;--------
+	//是Binder实体对象中记录所有引用的hash列表的节点
+	struct hlist_node node_entry;
+	//指向Binder引用对象的宿主进程
+	struct binder_proc *proc;
+	//用来描述Binder引用对象所引用的Binder实体对象
+	struct binder_node *node;
+	//是一个句柄或者称为描述符，它是用来描述一个Binder实体对象的
+	//在client进程的用户空间中，一个Binder引用对象是使用一个句柄值来描述的
+	//因此，当client进程的用户空间通过Binder驱动程序来访问一个service组件时，它只需要指定一个句柄值
+	uint32_t desc;
+	//描述一个Binder引用对象的强引用计数
+	int strong;
+	//描述一个Binder引用对象的弱引用计数
+	int weak;
+	//指向一个service组件的死亡接收通知
+	struct binder_ref_death *death; 
+}
