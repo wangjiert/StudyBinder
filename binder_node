@@ -53,6 +53,6 @@ struct binder_node{
   |
   |=======>>>>>>当一个Binder实体对象请求一个service组件来执行某一个操作时，会增加该service组件的强引用计数或弱引用计数，
   |=======>>>>>>相应的，Binder实体对象会将其成员变量has_strong_ref和has_weak_ref的值设为1，当一个service组件完成一个Binder实体对象所请
-  |=======>>>>>>求的操作后，Binder实体对象会请求减少该Service组件的强引用计数或则弱引用计数，Binder实体对象在请求减少一个Servicr组件增
+  |=======>>>>>>求的操作后，Binder实体对象会请求减少该Service组件的强引用计数或则弱引用计数，Binder实体对象在请求一个Servicr组件增
   |=======>>>>>>加或则减少强引用计数或则弱引用计数的过程中，会将其成员变量pending_strong_ref或则pending_weak_ref的值设为1，当该service
   |=======>>>>>>组件增加或则减少了强引用计数或则弱引用计数之后，Binder实体对象就会将这两个成员变量的值设为0
