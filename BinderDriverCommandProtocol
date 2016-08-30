@@ -1,0 +1,40 @@
+//命令协议代码
+enum BinderDriverCommandProtocol {
+	//当一个进程请求另一个进程执行某一个操作时，源进程就是用这个命令协议代码来请求Binder驱动程序将通信数据传递到目标进程
+	BC_TRANSACTION = _IOW('c', 0, struct binder_transaction_data),
+	//当目标进程处理完源进程所请求的操作之后，它就使用该命令协议代码来请求Binder驱动程序将结果数据传递给源进程
+	BC_REPLY = _IOW('c', 1, struct binder_transaction_data),
+	//暂不支持
+	BC_ACQUIRE_RESULT = _IOW('c', 2, int),
+	//当目标进程处理完源进程所请求的操作之后，它就会使用该命令协议代码来通知Binder驱动程序释放这个内核缓冲区
+	BC_FREE_BUFFER = _IOW('c', 3, int),
+	//增加一个一个Binder引用对象的弱引用计数
+	BC_INCREFS = _IOW('c', 4, int),通信数据是一个整形，它描述了一个Binder引用对象的句柄值
+	//增加一个Binder引用对象的强引用计数
+	BC_ACQUIRE = _IOW('c', 5, int),
+	//减少一个Binder引用对象的强引用计数
+	BC_RELEASE = _IOW('c', 6, int),
+	//减少一个Binder引用对象的弱引用计数
+	BC_DECREFS = _IOW('c', 7, int),
+	BC_INCREFS_DONE = _IOW('c', 8, struct binder_ptr_cookie),--
+								  |==>Binder驱动程序第一次增加一个Binder实体对象的强引用计数或则弱引用计数时，
+								  |==>就会使用返回协议码BR_ACQUIRE或则BR_INCREFS来请求对应的service进程增加对
+								  |==>应的service组件的强引用计数或则弱引用计数，当service进程完成这两个请求之
+								  |==>后，就会分别使用这两个命令协议代码将操作结果返回给Binder驱动程序
+	BC_ACQUIRE_DONE = _IOW('c', 9, struct binder_ptr_cookie),--
+	//暂不支持
+	BC_ATTEMPT_ACQUIRE = _IOW('c', 10, struct binder_pri_desc),
+	//当Binder驱动程序主动请求进程注册一个新的线程到它的Binder线程池中来处理进程间通信请求之后，新建的线程就会使用这个命令协议码来通知
+	//Binder驱动程序，它准备就绪了
+	BC_REGISTER_LOOPER = _IO('c', 11),
+	//当一个线程将自己注册到Binder驱动程序后，它接着就会使用这个命令协议码通知Binder驱动程序，它已经准备就绪处理进程间通信请求了
+	BC_ENTER_LOOPER = _IO('c', 12),
+	//当一个线程要退出时，它就使用这个命令协议码从Binder驱动程序中注销，这样它就不会再接收到进程间通信请求了
+	BC_EXIT_LOOPER = _IO('c', 13),
+	//如果一个进程希望获得它所引用的service组件的死亡接收通知，那么它就需要使用这个命令协议码向Binder驱动程序注册一个死亡接收通知
+	BC_REQUEST_DEATH_NOTIFICATION = _IOW('c', 14, struct binder_ptr_cookie),
+	//如果一个进程想注销之前所注册的一个死亡接收通知，那么它就需要使用这个命令协议码向Binder驱动程序发出请求
+	BC_CLEAR_DEATH_NOTIFICATION = _IOW('c', 15, struct binder_ptr_cookie),
+	//当一个进程获得一个service组件的死亡通知时，它就会使用这个命令协议代码通知Binder驱动程序，它已经处理完该service组件的死亡通知了
+	BC_DEAD_BINDER_DONE = _IOW('c', 16, void *),--->通信数据指向一个死亡接收通知结构体binder_ref_death
+};
