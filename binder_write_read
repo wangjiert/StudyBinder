@@ -1,0 +1,15 @@
+//用来描述进程间通信过程中所传输的数据，这些数据包括输入数据和输出数据
+struct binder_write_read{
+	//指定缓冲区write_buffer的大小，单位是字节
+	signed long write_size;
+	//描述Binder驱动程序从缓冲区write_buffer中处理了多少个字节的数据
+	signed long write_consumed;
+	//指向用户空间缓冲区的地址，里面保存的内容为要传输到Binder驱动程序的数据
+	unsigned long write_buffer;
+	//指定缓冲区read_buffer的大小，单位是字节
+	signed long read_size;
+	//描述用户空间应用程序从缓冲区read_buffer中处理了多少个字节的数据
+	signed long read_consumed;
+	//指向用户空间缓冲区的地址，里面保存的内容为Binder驱动程序返回给用户空间的进程间通信结果数据
+	unsigned long read_buffer;
+}
