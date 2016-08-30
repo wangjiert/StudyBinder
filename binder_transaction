@@ -1,0 +1,31 @@
+//用来描述进程间通信过程，这个过程又称为一个事务
+struct binder_transaction{
+	//用来标志一个事务结构体的身份，它是用来帮助调试Binder驱动程序的
+	int debug_id;
+	//当Binder驱动程序为目标进程或则目标线程创建一个事务时，就会将该事务的成员变量work的值设为BINDER_WORK_TRANSACTION,并且将它添加到目标
+	//进程活着目标线程的todo队列中去等待处理
+	struct binder_work work;
+	//发起事务的线程
+	struct binder_thread *from;
+	//描述一个事务所依赖的另一个事务
+	struct binder_transaction *from_parent;
+	//负责处理该事务的进程
+	struct binder_proc *to_proc;
+	//负责处理该事务的线程
+	struct binder_thread *to_thread;
+	//目标线程需要下一个需要处理的事务
+	struct binder_transaction *to_parent;
+	//用来区分一个事务是同步事务还是异步事务，同步事务时值设置为1
+	unsigned need_reply : 1;
+	//指向Binder驱动程序为该事务分配的一块内核缓冲区，它里面保存了进程间通信数据
+	struct binder_buffer *buffer;
+	unsigned int code;
+	unsigned int flags;
+	//描述源线程的优先级
+	long priority;
+	//一个线程在处理一个事务时，Binder驱动程序需要修改它的线程优先级，以便满足源线程和目标service组件的要求，Binder驱动程序在修改一个线程
+	//的优先级之前，会将它原来的线程优先级保存在一个事务结构体的成员变量saved_priority中，以便线程处理完该事务后可以恢复原来的优先级
+	long saved_priority;
+	//描述源线程的用户id
+	uid_t sender_euid;
+}
