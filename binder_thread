@@ -1,0 +1,47 @@
+//用来描述Binder线程池中的一个线程
+//一个线程注册到Binder驱动程序时，Binder驱动程序就会为它创建一个binder_thread结构体，并且将它的状态初始化为BINDER_LOOPER_STATE_NEED_RETURN
+//表示该线程需要马上返回到用户空间，由于一个线程在注册为Binder线程时可能还没有准备好去处理进程间通信请求，因此，最好返回到用户空间去做准备
+//工作，此外，当进程调用函数flush来刷新它的Binder线程时，Binder线程池中的线程的状态也会被重置为BINDER_LOOPER_STATE_NEED_RETURN
+//一个线程注册到Binder驱动程序之后，它接着就会通过BC_REGISTER_LOOPER或则BC_ENTER_LOOPER协议来通知Binder驱动程序，它可以处理进程间通信了，这时候
+//Binder驱动程序会将它的状态设置为BINDER_LOOPER_STATE_REGISTERED或则BINDER_LOOPER_STATE_ENTERED
+//如果一个线程是应用程序主动注册的，那么它就通过BC_ENTER_LOOPER协议来通知Binder驱动程序，它已经准备就绪处理进程间通信请求了，如果一个线程是
+//Binder驱动程序请求创建的，那么它就通过BC_REGISTER_LOOPER协议来通知Binder驱动程序，这时候Binder驱动程序就会增加它所请求的进程创建的Binder
+//线程数目
+struct binder_thread{
+	//指向宿主进程
+	struct binder_proc *proc;
+	//是进程结构体中红黑树的节点
+	struct rb_node rb_node;
+	//线程的id
+	int pid;
+	//线程的状态
+	//取值如下:
+		enum{
+			BINDER_LOOPER_STATE_REGISTERED = 0x01;
+			BINDER_LOOPER_STATE_ENTERED = 0x02;
+			BINDER_LOOPER_STATE_EXITED = 0x04;
+			BINDER_LOOPER_STATE_INVALID = 0x08;
+			BINDER_LOOPER_STATE_WAITING = 0x10;
+			BINDER_LOOPER_STATE_NEED_RETURN = 0x20;	
+		};
+	//当一个Binder线程处于空闲状态时，Binder驱动程序就会把它的状态设置为BINDER_LOOPER_STATE_WAITING
+	//当一个Binder线程退出时，它会通过BC_EXIT_LOOPER协议来通知Binder驱动程序，这时Binder驱动程序会将它的状态设置为
+	//BINDER_LOOPER_STATE_EXITED
+	//在异常情况下，一个Binder线程的状态会被设置为BINDER_LOOPER_STATE_INVALID
+	int looper;
+	//当Binder驱动程序决定将一个事务交给一个Binder线程处理时，他就会将该事务封装成一个binder_transaction结构体，并且将它添加到由线程结构体
+	//binder_thread的成员变量transaction_stack所描述的一个事务堆栈中
+	struct binder_transaction *transaction_stack;
+	//当一个来自client进程的请求指定要由某一个Binder线程来处理时，这个请求就会加入到相应的binder_thread结构体的成员变量todo所表示的队列
+	//中，并且唤醒这个线程来处理，因为这时候这个线程可能处于睡眠状态
+	struct list_head todo;
+	uint32_t return_error;-----
+				  |===>一个Binder线程在处理一个事务时，如果出现了异常情况，那么Binder驱动程序就会将相应的错误码保存在其成员
+				  |===>变量return_error和return_error2中，这时候线程就会将这些错误码返回给用户空间应用程序处理
+	uint32_t return_error2;----
+	//当一个Binder线程在处理一个事务T1并需要依赖于其他的Binder线程来处理另一个事务T2时，它就会睡眠在由成员变量wait所描述的一个等待队列中
+	//直到事务T2处理完为止
+	wait_queue_head_t wait;
+	//用来统计Binder线程数据的
+	struct binder_stats stats;
+}
