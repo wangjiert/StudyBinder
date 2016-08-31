@@ -1,0 +1,7 @@
+//用来描述一个Binder实体对象或则一个service组件的死亡接受通知
+struct binder_ptr_cookie {
+	void *ptr;
+	void *cookie;
+}
+当该结构体描述的是一个Binder实体对象时，成员变量ptr和cookie的含义等同于结构体binder_node的成员变量ptr和cookie
+当该结构体描述的是一个service组件的死亡接受通知时，ptr指向Binder引用对象的句柄值，cookie指向一个用来接受死亡通知的对象的地址
