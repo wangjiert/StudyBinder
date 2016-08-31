@@ -1,0 +1,40 @@
+//描述进程间通信过程中所传输的数据
+struct binder_transaction_data {
+	//描述一个目标Binder实体对象或则目标Binder引用对象
+	union {
+		//当是目标Binder引用对象，指向该Binder引用对象的句柄值
+		size_t handle;
+		//当是目标Binder实体对象是，指向与该Binder实体对象对应的一个service组件内部的弱引用计数对象的地址
+		void *ptr;
+	} target;
+	//由应用程序指定的额外参数，当Binder驱动程序使用返回命令协议BR_TRANSACTION向一个service进程发出一个进程间通信请求时，这个成员变量才
+	//有实际意义，它指向的是目标service组件的地址
+	void *cookie;
+	//由执行进程间通信的两个进程互相约定好的一个通信代码
+	unsigned int code;
+	//是一个标志值，用来描述进程间通信行为特征取值如下:
+	//	enum {
+	//		TF_ONE_WAY = 0x01;
+	//		TF_ROOT_OBJECT = 0x04;
+	//		TF_STATUS_CODE = 0x08;
+	//		TF_ACCEPT_FDS = 0x10;
+	//	}
+	//如果flags的TF_ONE_WAY位被设置为1，表示这是一个异步的进程间通信过程
+	//如果flags的TF_ACCEPT_FDS位被设置为0，表示源进程不允许目标进程返回的结果数据中包含有文件描述符
+	//如果flags的TF_STATUS_CODE位被设置为1，表示成员变量data所描述的数据缓冲区的内容是一个4字节的状态码
+	unsigned int flags;
+	pid_t sender_pid;---------
+				 |======>表示发起进程间通信请求的进程的PID和UID，值由Binder驱动程序来填写
+	uid_t 	sender_euid;------
+	//描述一个通信数据缓冲区的大小
+	size_t data_size;
+	//描述一个偏移数组的大小
+	size_t offsets_size;
+	union {
+		struct {
+			const void *buffer;
+			const void *offsets;
+		} ptr;
+		uint8_t buf[8];
+	} data;
+}
