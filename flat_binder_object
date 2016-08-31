@@ -1,0 +1,27 @@
+//用来描述一个Binder实体对象和Binder引用对象，文件描述符
+struct flat_binder_object {
+	//用来区分是用来描述什么的
+	//取值如下:
+		#define B_PACK_CHARS(c1, c2, c3, c4) ((((c1)<<24)) | (((c2)<<16)) | (((c3)<<8)) | (c4))
+		#define B_TYPE_LARGE 0x85
+		
+		enum {
+			BINDER_TYPE_BINDER = B_PACK_CHARS('s', 'b', '*', B_TYPE_LARGE),
+			BINDER_TYPE_WEAK_BINDER = B_PACK_CHARS('w', 'b', '*', B_TYPE_LARGE),
+			BINDER_TYPE_HANDLE = B_PACK_CHARS('s', 'h', '*', B_TYPE_LARGE),
+			BINDER_TYPE_WEAK_HANDLE = B_PACK_CHARS('w', 'h', '*', B_TYPE_LARGE),
+			BINDER_TYPE_FD = B_PACK_CHARS('f', 'd', '*', B_TYPE_LARGE),	
+		};
+	unsigned long type;
+	//只有当该结构体描述的是一个Binder实体对象时，它才有实际意义，目前只用到0到8位，0到7位描述的是一个Binder实体对象在处理一个进程间通信
+	//请求时，它所运行的线程应该具备的最小线程优先级，第8位用来描述一个Binder实体对象是否可以将一个包含有文件描述符的数据缓冲区传输到目标
+	//进程值为1表示允许
+	unsigned long flags;
+	union {				-----------|
+		void *binder;		-----------|
+		signed long handle;	-----------|
+	};				-----------|
+	void *cookie;			-----------|
+}						   |==>当该结构体描述的是一个Binder实体对象时，就是用binder指向service组件内部的弱引用计数对象
+						   |==>的地址，cookie指向service组件的地址
+						   |==>当描述的是一个Binder引用对象时，使用handle描述该Binder引用对象的句柄值
