@@ -5,20 +5,37 @@ enum BinderDriverReturnProtocol {
 	BR_OK = _IO('r', 1),
 	//当一个client进程向一个server进程发出进程间通信请求时，Binder驱动程序就会使用这个返回协议代码通知该server进程来处理该进程间通信请求
 	BR_TRANSACTION = _IOR('r', 2, struct binder_transaction_data),
-	//
+	//当service进程处理完该进程间通信请求之后，Binder驱动程序就会使用该返回协议代码将进程间通信请求结果数据返回给client进程
 	BR_REPLY = _IOR('r', 3, struct binder_transaction_data),
+	//暂不支持
 	BR_ACQUIRE_RESULT = _IOR('r', 4, int),
+	//Binder驱动程序在处理进程间通信请求时，若果发现目标进程或则目标线程已经死亡，它就会使用这个返回协议代码来通知源进程
 	BR_DEAD_REPLY = _IO('r', 5),
+	//表示命令协议代码已被接受，正在分发给目标线程或则目标进程处理
 	BR_TRANSACTION_COMPLETE = _IO('r', 6),
+	//增加一个service组件的弱引用计数
 	BR_INCREFS = _IOR('r', 7, struct binder_ptr_cookie),
+	//增加一个service组件的强引用计数
 	BR_ACQUIRE = _IOR('r', 8, struct binder_ptr_cookie),
+	//减少一个service组件的强引用计数
 	BR_RELEASE = _IOR('r', 9, struct binder_ptr_cookie),
+	//减少一个service组件的弱引用计数
 	BR_DECREFS = _IOR('r', 10, struct binder_ptr_cookie),
+	//暂不支持
 	BR_ATTEMPT_ACQUIRE = _IOR('r', 11, struct binder_pri_ptr_cookie),
+	//通知应用程序执行一个空操作，，它的存在是为了方便以后可以替换为返回协议代码BR_SPAWN_LOOPER
 	BR_NOOP = _IO('r', 12),
+	//当Binder驱动程序发现一个进程没有足够的空闲Binder线程来处理进程间通信请求时，就会使用该返回协议代码来通知该进程增加一个新的线程到
+	//Binder线程池中
 	BR_SPAWN_LOOPER = _IO('r', 13),
+	//暂不支持
 	BR_FINISHED = _IO('r', 14),
-	BR_DEAD_BINDER = _IOR('r', 15, void *),
+	//当Binder驱动程序监测到一个service组件的死亡事件时，它就会使用该返回协议代码通知相应的client进程
+	BR_DEAD_BINDER = _IOR('r', 15, void *),------>通信数据指向一个用来接受service组件死亡通知的对象的地址
+	//当client进程通知Binder驱动程序注销它之前所注册的一个死亡通知时，Binder驱动程序执行完这个注销操作之后，就会使用这个返回协议代码来通知
+	//client进程
 	BR_CLEAR_DEATH_NOTIFICATION_DONE = _IOR('r', 16, void *),
+	//当Binder驱动程序处理一个进程发出的BC_TRANSACTION命令协议时，如果发生了异常情况，它就会使用该返回协议代码通知源进程
 	BR_FAILED_REPLY = _IO('r', 17),
-};
+}
+;
